@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodic cleanup of expired givemesudo sudoers drop-ins
+
+[Timer]
+OnCalendar=*:0/5
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

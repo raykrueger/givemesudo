@@ -1,0 +1,6 @@
+[Unit]
+Description=Clean up expired givemesudo sudoers drop-ins
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/find /etc/sudoers.d -maxdepth 1 -name 'givemesudo_*' -mmin +60 -delete
