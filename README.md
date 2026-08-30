@@ -1,12 +1,48 @@
 # givemesudo
 
-Grant yourself passwordless sudo for one hour — without touching your real sudoers policy.
+Give yourself — or your agent — full root for one hour, and let it expire by itself.
 
-`givemesudo` writes a temporary per-user drop-in to `/etc/sudoers.d/` giving the
-caller `NOPASSWD: ALL`. A systemd timer sweeps `/etc/sudoers.d/` every five
-minutes and deletes any drop-in older than 60 minutes, so the grant expires on
-its own. No config, no daemon, no state to manage: run it, get root, and it's
-gone within the hour.
+Every "I need root for a bit" moment pushes you toward a permanent change:
+`timestamp_timeout` in sudoers, a `NOPASSWD` line, a sudo-group membership.
+`givemesudo` makes it temporary instead. It writes a per-user drop-in to
+`/etc/sudoers.d/` granting the caller `NOPASSWD: ALL`, and a systemd timer
+deletes it 60 minutes later. No config to revert, no state to track: run it,
+get root, and if you forget about it, it forgets itself.
+
+## Why not just use sudo's `timestamp_timeout`?
+
+Because a longer timeout doesn't do what you actually want:
+
+- **Prompt vs. permission.** `timestamp_timeout` only suppresses the password
+  prompt — every command is still gated by your real policy. If your sudoers
+  doesn't allow it, more patience won't. `givemesudo` temporarily removes the
+  gate entirely.
+- **State vs. decision.** A timeout change is a permanent, system-wide config
+  edit that applies to everyone until you remember to revert it. The drop-in is
+  a visible file that deletes itself — the grant can't outlive the file.
+- **You vs. everything.** The timeout only helps *you*, at a terminal, while
+  interactive. With an active grant, every subprocess of your user — scripts,
+  daemons, tmux sessions, `curl | sudo bash` installers, headless flows — can
+  sudo any command without a prompt or per-command allowlists.
+
+## Use cases
+
+**Give an agent harness time-boxed root.** Coding agents (Claude Code, Pi,
+…) constantly hit steps that need root. The alternatives are babysitting every
+elevation, or a standing `NOPASSWD` in sudoers — full root, forever, for a
+process that runs arbitrary model output. `givemesudo` turns that into a
+deliberate, bounded decision:
+
+```sh
+sudo givemesudo     # "this session gets root for the next hour"
+claude              # its bash tool can sudo any command, ~1 hour, then it's gone
+```
+
+**One-off root work.** Messing with system state — services, sysctls,
+package installs — without leaving any trace in your sudoers afterwards.
+
+**Scripts and installers.** Anything that shells out to sudo internally works
+non-interactively for the window, without pre-allowlisting each command.
 
 ## Install
 
@@ -55,8 +91,10 @@ sudoers drop-ins are left alone.
   written; if validation fails, the file is deleted and the script exits
   non-zero.
 - While the grant is active, *any* path to this user's session is full
-  passwordless root. Use it on machines where that's acceptable, and assume
-  it expires within ~65 minutes (60 min + up to 5 min sweep delay).
+  passwordless root — that includes anything that can execute code as your
+  user (agents, editors, downloaded scripts). Use it on machines where that's
+  acceptable, and assume it expires within ~65 minutes (60 min + up to 5 min
+  sweep delay).
 - To revoke early: `sudo rm /etc/sudoers.d/givemesudo_$USER`.
 
 ## License
