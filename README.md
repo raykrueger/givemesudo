@@ -1,6 +1,6 @@
 # givemesudo
 
-Grant yourself passwordless sudo for exactly one hour — without touching your real sudoers policy.
+Grant yourself passwordless sudo for one hour — without touching your real sudoers policy.
 
 `givemesudo` writes a temporary per-user drop-in to `/etc/sudoers.d/` giving the
 caller `NOPASSWD: ALL`. A systemd timer sweeps `/etc/sudoers.d/` every five
