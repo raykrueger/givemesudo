@@ -13,6 +13,8 @@ gone within the hour.
 Requires root (systemd, `visudo`).
 
 ```sh
+git clone https://github.com/raykrueger/givemesudo.git
+cd givemesudo
 sudo ./install.sh
 ```
 
