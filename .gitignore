@@ -1,0 +1,10 @@
+# Editors / IDEs
+*~
+.swp
+.swo
+.idea/
+.vscode/
+
+# OS noise
+.DS_Store
+Thumbs.db
